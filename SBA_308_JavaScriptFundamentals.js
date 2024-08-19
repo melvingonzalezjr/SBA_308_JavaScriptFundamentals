@@ -80,10 +80,10 @@ const LearnerSubmissions = [
  ************************************************ MY CODE BEGINS HERE *****************************************
  *************************************************************************************************************/
 //Defining Variables used throughout.
-let LearnerIds = getLearnerID(LearnerSubmissions)
-let AssignmentsDue = getAssignmentsDue(AssignmentGroup)
-let GradesSum = getGradesSum(LearnerSubmissions, AssignmentGroup)
-let Average = getAverage(AssignmentGroup)
+let LearnerIds = getLearnerID(LearnerSubmissions);
+let AssignmentsDue = getAssignmentsDue(AssignmentGroup);
+let GradesSum = getGradesSum(LearnerSubmissions, AssignmentGroup);
+let Average = getAverage(AssignmentGroup);
 
 /*
 STEP 1: Get Learner ID 
@@ -105,8 +105,8 @@ function getLearnerID(learnerSubmissions) {
 STEP 2: Get Assignments Due 
 */
 function getAssignmentsDue(assignmentGroup) {
-  dueAssignments = [];
-  for (assignment of assignmentGroup.assignments) {
+  const dueAssignments = [];
+  for (let assignment of assignmentGroup.assignments) {
     if (assignment.due_at <= new Date().toISOString().slice(0, 10)) {
       dueAssignments.push(assignment.id);
     }
@@ -120,7 +120,7 @@ function getAssignmentsDue(assignmentGroup) {
 STEP 3: Get SumGrades For Each Student
 */
 function getGradesSum(learnerSubmissions, assignmentGroup) {
-  const learnerGrades = []            //array objects with keys of id, sum to be initialized after summing
+  const learnerGrades = []; //array objects with keys of id, sum to be initialized after summing
 
   for (let learnerID of LearnerIds) {
     /*
@@ -131,18 +131,28 @@ function getGradesSum(learnerSubmissions, assignmentGroup) {
     ¤E: Finally we use reduce to condense the scores for the learner into one sum (all the filters ensure we are doing it just for that student, and for assignments actually due)
     */
     const gradeSum = learnerSubmissions
-      .filter(learnerSubmission => AssignmentsDue.includes(learnerSubmission.assignment_id))
-      .filter(learnerSubmission => learnerSubmission.learner_id === learnerID)
-      .reduce((accumulator, currentValue) => accumulator + currentValue.submission.score, 0);
-    
-    learnerGrades.push(           //pushing the learnerID and gradeSum values.
+      .filter((learnerSubmission) =>
+        AssignmentsDue.includes(learnerSubmission.assignment_id)
+      )
+      .filter((learnerSubmission) => learnerSubmission.learner_id === learnerID)
+      .reduce(
+        (accumulator, currentValue) =>
+          accumulator + currentValue.submission.score,
+        0
+      );
+
+    learnerGrades.push(
+      //pushing the learnerID and gradeSum values.
       {
         id: learnerID,
-        sum: gradeSum
-      });
-  };
+        sum: gradeSum,
+      }
+    );
+  }
 
-  filteredAssignments = assignmentGroup.assignments.filter(assignment => AssignmentsDue.includes(assignment.id))
+  filteredAssignments = assignmentGroup.assignments.filter((assignment) =>
+    AssignmentsDue.includes(assignment.id)
+  );
   /*
   ¤A: filteredAssignments is array of assignment objects from AssignmentGroup that are actually due (AssignmentsDue variable is defined in Line 84, with the Function in Step 2)
   ¤B: Psuedocode logic of for loop is as follows:
@@ -158,13 +168,19 @@ function getGradesSum(learnerSubmissions, assignmentGroup) {
 
   for (let assignment of filteredAssignments) {
     for (let learnerSubmission of learnerSubmissions) {
-      if (learnerSubmission.assignment_id === assignment.id && learnerSubmission.submission.submitted_at > assignment.due_at) {
-        learnerGrades.map(eachLearnerGrade => {
-          eachLearnerGrade.sum -= (eachLearnerGrade.id == learnerSubmission.learner_id)? (assignment.points_possible *.10): 0;
+      if (
+        learnerSubmission.assignment_id === assignment.id &&
+        learnerSubmission.submission.submitted_at > assignment.due_at
+      ) {
+        learnerGrades.map((eachLearnerGrade) => {
+          eachLearnerGrade.sum -=
+            eachLearnerGrade.id == learnerSubmission.learner_id
+              ? assignment.points_possible * 0.1
+              : 0;
         });
       }
-    };
-  };
+    }
+  }
 
   return learnerGrades;
 }
@@ -174,21 +190,44 @@ function getGradesSum(learnerSubmissions, assignmentGroup) {
 STEP 4: Get total Avg in AssignmentGroup
 */
 function getAverage(assignmentGroup) {
-  const gradesAverage = [...GradesSum]  //gradeAverage is copy of gradeSum declared at beginning of my code
+  //ensure we have grades to calculate Average
+  try {
+    if (!AssignmentsDue.length) {
+      throw new Error("Can't Computer Average. No Assignments are Due.");
+    }
+    if (!GradesSum.length) {
+      throw new Error("Can't Computer Average. No Grades Available");
+    }
 
-  //Filter assignments to those due, then sum up the points_possible
-  totalPointsPossible = assignmentGroup.assignments
-    .filter(assignment => AssignmentsDue.includes(assignment.id))
-    .reduce((accumulator, currentValue) => accumulator + currentValue.points_possible, 0);
+    const gradesAverage = [...GradesSum]; //gradeAverage is copy of gradeSum declared at beginning of my code
 
-  //take each object and create avg key with value of the object.sum/totalPointsPossible
-  //Delete the sum key now as no longer needed.
-  gradesAverage.map( eachGradeAverage => {
-    eachGradeAverage['avg'] = eachGradeAverage.sum/totalPointsPossible
-    delete eachGradeAverage.sum
-  });
+    //Filter assignments to those due, then sum up the points_possible
+    let totalPointsPossible = assignmentGroup.assignments
+      .filter((assignment) => AssignmentsDue.includes(assignment.id))
+      .reduce(
+        (accumulator, currentValue) =>
+          accumulator + currentValue.points_possible,
+        0
+      );
 
-  return gradesAverage
+    //Ensure totalPointsPossible is a non-zero and positive
+    if (typeof totalPointsPossible !== "number" || totalPointsPossible <= 0) {
+      throw new Error(
+        "Can't Compute Average. Ensure totalPointsPossible is number > 0"
+      );
+    }
+    //take each object and create avg key with value of the object.sum/totalPointsPossible
+    //Delete the sum key now as no longer needed.
+    gradesAverage.map((eachGradeAverage) => {
+      eachGradeAverage["avg"] = eachGradeAverage.sum / totalPointsPossible;
+      delete eachGradeAverage.sum;
+    });
+
+    return gradesAverage;
+  } catch (error) {
+    console.error(`Error!!!! ${error.message}`);
+    return [];
+  }
 }
 // console.log(getAverage(AssignmentGroup))
 
@@ -196,24 +235,44 @@ function getAverage(assignmentGroup) {
 STEP 5: Get Actual Score for Each Assignment for Each Learner
 */
 function getLearnerData(course, ag, submissions) {
-  const results = [...Average]
+  //Check to see if ag is from the same course we're looking up. Gives error is not.
+  let agInCourse = (course.id === ag.course_id) ? true : false;
+  if (!agInCourse) {
+    throw new Error("ERROR - The Assignment Group must be of the same Course");
+  }
 
-    ag.assignments
-      .filter(assignment => AssignmentsDue.includes(assignment.id))
-      .forEach(assignment => {
-        submissions.forEach(submission => {
-            if (submission.assignment_id === assignment.id) {
-              const learnerResult = results.find(result => result.id === submission.learner_id)
+  const results = [...Average];
+  /*
+    LOGIC FOR BELOW
+      ¤ag.assignments are filtered to assignments due
+      ¤For each individual element
+        ¤For each individual submission
+          ¤if the submission.assignment_id and assignment.id match(making sure the two link correctly)
+            ¤We then find first instance of that id within results array, calling it learnerResult
+            ¤score is ternary operator. if submission was late, score is penalized before dividing by points_possible
+            ¤if not, just score/points_possible.
+            ¤learnerResult(each element of results) has a new key equivalaent to assignment_id, where value is score
+  */
+  ag.assignments
+    .filter((assignment) => AssignmentsDue.includes(assignment.id))
+    .forEach((assignment) => {
+      submissions.forEach((submission) => {
+        if (submission.assignment_id === assignment.id) {
+          const learnerResult = results.find(
+            (result) => result.id === submission.learner_id
+          );
 
-              const score = (submission.submission.submitted_at > assignment.due_at)? 
-              (submission.submission.score - (assignment.points_possible *.10) ) / assignment.points_possible:
-              (submission.submission.score) / assignment.points_possible;
-              
-              learnerResult[Number(submission.assignment_id)] = score;
-            }
-        });
+          const score =
+            submission.submission.submitted_at > assignment.due_at
+              ? (submission.submission.score -
+                  assignment.points_possible * 0.1) /
+                assignment.points_possible
+              : submission.submission.score / assignment.points_possible;
+
+          learnerResult[submission.assignment_id] = score;
+        }
       });
-    return results
+    });
+  return results;
 }
 console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
-
