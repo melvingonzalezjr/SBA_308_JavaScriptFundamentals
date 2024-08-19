@@ -110,6 +110,7 @@ function getAssignmentsDue(assignmentGroup) {
       dueAssignments.push(assignment.id);
     }
   }
+  //Comparing Date objects is easier as Strings, and slicing out just the initial 10 characters(YYYY-MM-DD)
   return dueAssignments;
 }
 // console.log(getAssignmentsDue(AssignmentGroup));
@@ -118,15 +119,22 @@ function getAssignmentsDue(assignmentGroup) {
 STEP 3: Get SumGrades For Each Student
 */
 function getGradesSum(learnerSubmissions, assignmentGroup) {
-  const learnerGrades = []
+  const learnerGrades = []            //array objects with keys of id, sum to be initialized after summing
 
   for (let learnerID of LearnerIds) {
     const gradeSum = learnerSubmissions
+    /*
+    ¤A: gradeSum variable holds total sum for each Learner
+    ¤B: LearnerIds is Array of LearnerIds, calculated by function in Step 1.
+    ¤C: learnerSubmissions parameter is filtered to only include assignments due(where AssignmentsDue array defined by function in Step 2 includes the learnerSubmission element's assignment_id)
+    ¤D: This parameter is then filtered to be only the learnerSubmission element's with matching learner_id to the learnerID element referenced in for-loop initialization (so only submissions for this learnerID)
+    ¤E: Finally we use reduce to condense the scores for the learner into one sum (all the filters ensure we are doing it just for that student, and for assignments actually due)
+    */
       .filter(learnerSubmission => AssignmentsDue.includes(learnerSubmission.assignment_id))
       .filter(learnerSubmission => learnerSubmission.learner_id === learnerID)
       .reduce((accumulator, currentValue) => accumulator + currentValue.submission.score, 0);
     
-    learnerGrades.push(
+    learnerGrades.push(           //pushing the learnerID and gradeSum values.
       {
         id: learnerID,
         sum: gradeSum
@@ -134,9 +142,21 @@ function getGradesSum(learnerSubmissions, assignmentGroup) {
   };
 
   filteredAssignments = assignmentGroup.assignments.filter(assignment => AssignmentsDue.includes(assignment.id))
+  /*
+  ¤A: filteredAssignments is array of assignment objects from AssignmentGroup that are actually due (AssignmentsDue variable is defined in Line 84, with the Function in Step 2 on Line 104)
+  ¤B: Psuedocode logic of for loop is as follows:
+      for each filteredAssignment:
+        for each learnerSubmission:
+          if learnerSubmission.assignment_id matches the assignment.id AND learner's submission is late:
+            then learnerGrades array runs a map function through eachLearnerGrade:
+              if learnerGrade.id is equal to the learner_id of the learner with late submission: 
+                then that eachLearnerGrade.sum value subtracts the assignmeent.points_possible*.10
+              if not:
+                then subtract 0 AKA don't change score.
+  */
 
-  for (assignment of filteredAssignments) {
-    for (learnerSubmission of learnerSubmissions) {
+  for (let assignment of filteredAssignments) {
+    for (let learnerSubmission of learnerSubmissions) {
       if (learnerSubmission.assignment_id === assignment.id && learnerSubmission.submission.submitted_at > assignment.due_at) {
         learnerGrades.map(eachLearnerGrade => {
           eachLearnerGrade.sum -= (eachLearnerGrade.id == learnerSubmission.learner_id)? (assignment.points_possible *.10): 0;
