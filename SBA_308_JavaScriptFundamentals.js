@@ -278,3 +278,4 @@ function getLearnerData(course, ag, submissions) {
   return results;
 }
 console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
+
