@@ -83,6 +83,7 @@ const LearnerSubmissions = [
 let LearnerIds = getLearnerID(LearnerSubmissions)
 let AssignmentsDue = getAssignmentsDue(AssignmentGroup)
 let GradesSum = getGradesSum(LearnerSubmissions, AssignmentGroup)
+let Average = getAverage(AssignmentGroup)
 
 /*
 STEP 1: Get Learner ID 
@@ -122,7 +123,6 @@ function getGradesSum(learnerSubmissions, assignmentGroup) {
   const learnerGrades = []            //array objects with keys of id, sum to be initialized after summing
 
   for (let learnerID of LearnerIds) {
-    const gradeSum = learnerSubmissions
     /*
     ¤A: gradeSum variable holds total sum for each Learner
     ¤B: LearnerIds is Array of LearnerIds, calculated by function in Step 1.
@@ -130,6 +130,7 @@ function getGradesSum(learnerSubmissions, assignmentGroup) {
     ¤D: This parameter is then filtered to be only the learnerSubmission element's with matching learner_id to the learnerID element referenced in for-loop initialization (so only submissions for this learnerID)
     ¤E: Finally we use reduce to condense the scores for the learner into one sum (all the filters ensure we are doing it just for that student, and for assignments actually due)
     */
+    const gradeSum = learnerSubmissions
       .filter(learnerSubmission => AssignmentsDue.includes(learnerSubmission.assignment_id))
       .filter(learnerSubmission => learnerSubmission.learner_id === learnerID)
       .reduce((accumulator, currentValue) => accumulator + currentValue.submission.score, 0);
@@ -194,3 +195,25 @@ function getAverage(assignmentGroup) {
 /*
 STEP 5: Get Actual Score for Each Assignment for Each Learner
 */
+function getLearnerData(course, ag, submissions) {
+  const results = [...Average]
+
+    ag.assignments
+      .filter(assignment => AssignmentsDue.includes(assignment.id))
+      .forEach(assignment => {
+        submissions.forEach(submission => {
+            if (submission.assignment_id === assignment.id) {
+              const learnerResult = results.find(result => result.id === submission.learner_id)
+
+              const score = (submission.submission.submitted_at > assignment.due_at)? 
+              (submission.submission.score - (assignment.points_possible *.10) ) / assignment.points_possible:
+              (submission.submission.score) / assignment.points_possible;
+              
+              learnerResult[Number(submission.assignment_id)] = score;
+            }
+        });
+      });
+    return results
+}
+console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
+
