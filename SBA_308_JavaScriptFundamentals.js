@@ -82,7 +82,7 @@ const LearnerSubmissions = [
 //Defining Variables used throughout.
 let LearnerIds = getLearnerID(LearnerSubmissions)
 let AssignmentsDue = getAssignmentsDue(AssignmentGroup)
-
+let GradesSum = getGradesSum(LearnerSubmissions, AssignmentGroup)
 
 /*
 STEP 1: Get Learner ID 
@@ -143,7 +143,7 @@ function getGradesSum(learnerSubmissions, assignmentGroup) {
 
   filteredAssignments = assignmentGroup.assignments.filter(assignment => AssignmentsDue.includes(assignment.id))
   /*
-  ¤A: filteredAssignments is array of assignment objects from AssignmentGroup that are actually due (AssignmentsDue variable is defined in Line 84, with the Function in Step 2 on Line 104)
+  ¤A: filteredAssignments is array of assignment objects from AssignmentGroup that are actually due (AssignmentsDue variable is defined in Line 84, with the Function in Step 2)
   ¤B: Psuedocode logic of for loop is as follows:
       for each filteredAssignment:
         for each learnerSubmission:
@@ -167,4 +167,30 @@ function getGradesSum(learnerSubmissions, assignmentGroup) {
 
   return learnerGrades;
 }
-console.log(getGradesSum(LearnerSubmissions, AssignmentGroup))
+// console.log(getGradesSum(LearnerSubmissions, AssignmentGroup))
+
+/*
+STEP 4: Get total Avg in AssignmentGroup
+*/
+function getAverage(assignmentGroup) {
+  const gradesAverage = [...GradesSum]  //gradeAverage is copy of gradeSum declared at beginning of my code
+
+  //Filter assignments to those due, then sum up the points_possible
+  totalPointsPossible = assignmentGroup.assignments
+    .filter(assignment => AssignmentsDue.includes(assignment.id))
+    .reduce((accumulator, currentValue) => accumulator + currentValue.points_possible, 0);
+
+  //take each object and create avg key with value of the object.sum/totalPointsPossible
+  //Delete the sum key now as no longer needed.
+  gradesAverage.map( eachGradeAverage => {
+    eachGradeAverage['avg'] = eachGradeAverage.sum/totalPointsPossible
+    delete eachGradeAverage.sum
+  });
+
+  return gradesAverage
+}
+// console.log(getAverage(AssignmentGroup))
+
+/*
+STEP 5: Get Actual Score for Each Assignment for Each Learner
+*/
