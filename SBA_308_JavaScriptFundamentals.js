@@ -83,7 +83,7 @@ const LearnerSubmissions = [
 //helper filter function...Added after STEP 5 to cut down on code
 //Comparing Date objects is easier as Strings, and slicing out just the initial 10 characters(YYYY-MM-DD)
 function filterAssignmentsDue(assignments) {
-  const currentDate = new Date().toISOString().slice(0, 10);
+  let currentDate = new Date().toISOString().slice(0, 10);
   return assignments.filter((assignment) => assignment.due_at <= currentDate);
 }
 
@@ -125,8 +125,8 @@ function getAssignmentsDue(assignmentGroup) {
 STEP 3: Get SumGrades For Each Student
 */
 function getGradesSum(learnerSubmissions, assignmentGroup) {
-  let LearnerIds = getLearnerID(LearnerSubmissions);
-  let AssignmentsDue = getAssignmentsDue(AssignmentGroup);
+  const LearnerIds = getLearnerID(LearnerSubmissions);
+  const AssignmentsDue = getAssignmentsDue(AssignmentGroup);
   const learnerGrades = []; //array objects with keys of id, sum to be initialized after summing
 
   for (let learnerID of LearnerIds) {
