@@ -76,15 +76,21 @@ const LearnerSubmissions = [
   },
 ];
 
-/*
- * MY CODE BEGINS HERE
- */
+/**************************************************************************************************************
+ ************************************************ MY CODE BEGINS HERE *****************************************
+ *************************************************************************************************************/
+//Defining Variables used throughout.
+let LearnerIds = getLearnerID(LearnerSubmissions)
+let AssignmentsDue = getAssignmentsDue(AssignmentGroup)
 
-/*STEP 1: Get Learner ID */
-function getLearnerID(submissionsArray) {
+
+/*
+STEP 1: Get Learner ID 
+*/
+function getLearnerID(learnerSubmissions) {
   const learnerIdArray = [];
 
-  submissionsArray.map(function (object) {
+  learnerSubmissions.map(function (object) {
     if (!learnerIdArray.includes(object["learner_id"])) {
       learnerIdArray.push(object["learner_id"]);
     }
@@ -94,17 +100,51 @@ function getLearnerID(submissionsArray) {
 }
 // console.log(getLearnerID(LearnerSubmissions));
 
-/*STEP 2: Get Assignments Due */
+/*
+STEP 2: Get Assignments Due 
+*/
 function getAssignmentsDue(assignmentGroup) {
   dueAssignments = [];
   for (assignment of assignmentGroup.assignments) {
-    if (assignment.due_at <= new Date().toISOString().slice(0,10)) {
-      dueAssignments.push(assignment);
+    if (assignment.due_at <= new Date().toISOString().slice(0, 10)) {
+      dueAssignments.push(assignment.id);
     }
   }
   return dueAssignments;
 }
 // console.log(getAssignmentsDue(AssignmentGroup));
 
-/*STEP 3: Get Grades abd Average for Due Assignments */
+/*
+STEP 3: Get SumGrades For Each Student
+*/
+function getGradesSum(learnerSubmissions, assignmentGroup) {
+  const learnerGrades = []
 
+  for (let learnerID of LearnerIds) {
+    const gradeSum = learnerSubmissions
+      .filter(learnerSubmission => AssignmentsDue.includes(learnerSubmission.assignment_id))
+      .filter(learnerSubmission => learnerSubmission.learner_id === learnerID)
+      .reduce((accumulator, currentValue) => accumulator + currentValue.submission.score, 0);
+    
+    learnerGrades.push(
+      {
+        id: learnerID,
+        sum: gradeSum
+      });
+  };
+
+  filteredAssignments = assignmentGroup.assignments.filter(assignment => AssignmentsDue.includes(assignment.id))
+
+  for (assignment of filteredAssignments) {
+    for (learnerSubmission of learnerSubmissions) {
+      if (learnerSubmission.assignment_id === assignment.id && learnerSubmission.submission.submitted_at > assignment.due_at) {
+        learnerGrades.map(eachLearnerGrade => {
+          eachLearnerGrade.sum -= (eachLearnerGrade.id == learnerSubmission.learner_id)? (assignment.points_possible *.10): 0;
+        });
+      }
+    };
+  };
+
+  return learnerGrades;
+}
+console.log(getGradesSum(LearnerSubmissions, AssignmentGroup))
