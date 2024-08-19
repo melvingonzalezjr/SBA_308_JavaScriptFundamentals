@@ -259,9 +259,7 @@ function getLearnerData(course, ag, submissions) {
         ¤For each individual submission
           ¤if the submission.assignment_id and assignment.id match(making sure the two link correctly)
             ¤We then find first instance of that id within results array, calling it learnerResult
-            ¤score is ternary operator. if submission was late, score is penalized before dividing by points_possible
-            ¤if not, just score/points_possible.
-            ¤learnerResult(each element of results) has a new key equivalaent to assignment_id, where value is score
+            ¤learnerResult's key equivalent to submission.assignment_id is assigned value from calculateScore
   */
   filterAssignmentsDue(ag.assignments).forEach((assignment) => {
     submissions.forEach((submission) => {
